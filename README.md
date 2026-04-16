@@ -1,65 +1,130 @@
-# Multimodal-RAG-System-for-Document-QA
+# 🚀 Multimodal RAG System for Document Q&A
 
-> You can find the tutorial for this project on [YouTube](https://youtu.be/dXxQ0LR-3Hg).
+## 📌 Overview
+This project is a **Multimodal Retrieval-Augmented Generation (RAG) system** that enables question answering over **PDF documents containing both text and images**.
 
-## Introduction
-------------
-The MultiPDF Chat App is a Python application that allows you to chat with multiple PDF documents. You can ask questions about the PDFs using natural language, and the application will provide relevant responses based on the content of the documents. This app utilizes a language model to generate accurate answers to your queries. Please note that the app will only respond to questions related to the loaded PDFs.
+It uses a unified embedding space (CLIP) to support **cross-modal search**, allowing users to query:
+- 📄 Text content
+- 🖼️ Images inside PDFs
 
-## How It Works
-------------
+The system retrieves relevant multimodal context using FAISS and generates responses using **GPT-4 (vision-capable model)**.
 
-![MultiPDF Chat App Diagram](./docs/PDF-LangChain.jpg)
+---
 
-The application follows these steps to provide responses to your questions:
+## ⚙️ Architecture
 
-1. PDF Loading: The app reads multiple PDF documents and extracts their text content.
+### 1️⃣ PDF Parsing (PyMuPDF)
+- Loads PDF using `fitz (PyMuPDF)`
+- Extracts:
+  - Text per page
+  - Embedded images
 
-2. Text Chunking: The extracted text is divided into smaller chunks that can be processed effectively.
+---
 
-3. Language Model: The application utilizes a language model to generate vector representations (embeddings) of the text chunks.
+### 2️⃣ Text Processing
+- Text is cleaned and split using:
+  - `RecursiveCharacterTextSplitter`
+- Each chunk is stored as a LangChain `Document`
 
-4. Similarity Matching: When you ask a question, the app compares it with the text chunks and identifies the most semantically similar ones.
+---
 
-5. Response Generation: The selected chunks are passed to the language model, which generates a response based on the relevant content of the PDFs.
+### 3️⃣ Image Processing
+For each extracted image:
+- Converted to PIL format
+- Encoded to **base64 (for GPT-4V input)**
+- Embedded using **CLIP vision encoder**
+- Stored with metadata (`page`, `image_id`)
 
-## Dependencies and Installation
-----------------------------
-To install the MultiPDF Chat App, please follow these steps:
+---
 
-1. Clone the repository to your local machine.
+### 4️⃣ Multimodal Embeddings (CLIP)
+A unified embedding model is used:
 
-2. Install the required dependencies by running the following command:
-   ```
-   pip install -r requirements.txt
-   ```
+- 📄 Text → CLIP text encoder  
+- 🖼️ Images → CLIP vision encoder  
+- 🔗 Both mapped into same vector space (512-dim)
 
-3. Obtain an API key from OpenAI and add it to the `.env` file in the project directory.
-```commandline
-OPENAI_API_KEY=your_secrit_api_key
-```
+---
 
-## Usage
------
-To use the MultiPDF Chat App, follow these steps:
+### 5️⃣ Vector Store (FAISS)
+- All embeddings (text + images) are stored in a **single FAISS index**
+- Enables **cross-modal similarity search**
 
-1. Ensure that you have installed the required dependencies and added the OpenAI API key to the `.env` file.
+---
 
-2. Run the `main.py` file using the Streamlit CLI. Execute the following command:
-   ```
-   streamlit run app.py
-   ```
+### 6️⃣ Retrieval
+- User query is embedded using CLIP text encoder
+- FAISS retrieves top-k relevant:
+  - Text chunks
+  - Images
 
-3. The application will launch in your default web browser, displaying the user interface.
+---
 
-4. Load multiple PDF documents into the app by following the provided instructions.
+### 7️⃣ Multimodal Prompt Construction
+Retrieved results are formatted into a GPT-4 message:
+- Text context is included as structured excerpts
+- Images are passed as **base64 image inputs**
+- Query + context are combined into a single prompt
 
-5. Ask questions in natural language about the loaded PDFs using the chat interface.
+---
 
-## Contributing
-------------
-This repository is intended for educational purposes and does not accept further contributions. It serves as supporting material for a YouTube tutorial that demonstrates how to build this project. Feel free to utilize and enhance the app based on your own requirements.
+### 8️⃣ Answer Generation (GPT-4 Vision)
+- `gpt-4.1` is used via LangChain
+- Model reasons over:
+  - Text + images together
+- Produces final grounded response
 
-## License
--------
-The MultiPDF Chat App is released under the [MIT License](https://opensource.org/licenses/MIT).
+---
+
+## ✨ Key Features
+
+- 📄 Multi-PDF document support  
+- 🖼️ Image + text extraction from PDFs  
+- 🧠 Unified CLIP embeddings (multimodal space)  
+- 🔍 Cross-modal semantic search using FAISS  
+- 🤖 GPT-4 Vision-based reasoning  
+- ⚡ End-to-end RAG pipeline  
+
+---
+
+## 🧠 Tech Stack
+
+- Python  
+- PyMuPDF (fitz)  
+- OpenAI CLIP (`clip-vit-base-patch32`)  
+- FAISS (vector search)  
+- LangChain  
+- GPT-4.1 (Vision-capable LLM)  
+- PyTorch  
+- PIL (image processing)  
+- scikit-learn  
+
+---
+
+## 📂 Project Workflow
+PDF → Text + Images
+↓
+CLIP Embeddings
+↓
+FAISS Vector Store
+↓
+User Query → CLIP Embedding
+↓
+Similarity Search (Text + Images)
+↓
+Multimodal Prompt Construction
+↓
+GPT-4 Vision Response
+
+---
+
+## ▶️ How to Run
+
+### 1. Install dependencies
+```bash
+pip install -r requirements.txt
+2. Add API key
+Create a .env file:
+OPENAI_API_KEY=your_secret_api_key
+3. Run the application
+python app.py
