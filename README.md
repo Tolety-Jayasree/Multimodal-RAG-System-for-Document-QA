@@ -1,1 +1,1 @@
-# Tolety-Jayasree-Multimodal-RAG-System-for-Document-QA
+# Multimodal-RAG-System-for-Document-QA
