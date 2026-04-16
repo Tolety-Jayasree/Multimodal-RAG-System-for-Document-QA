@@ -129,5 +129,7 @@ OPENAI_API_KEY=your_secret_api_key
 3. Run the application
 python app.py
 
+---
+
 Built by Jaya Sree Tolety
 AI/ML Engineer | LLMs | RAG Systems | Agentic AI
